@@ -1612,3 +1612,37 @@ fn fts_drop() {
     )
     .unwrap();
 }
+
+#[test]
+fn test_uuid_v5() {
+    let db = DbInstance::default();
+    // uuid_v5 with keyword namespace - deterministic, same input produces same output
+    let res = db
+        .run_default(r#"?[id] <- [[uuid_v5("url", "example.com")]]"#)
+        .unwrap();
+    assert_eq!(res.rows.len(), 1);
+    assert!(res.rows[0][0].get_uuid().is_some());
+
+    // Determinism: running the same query again produces the same UUID
+    let res2 = db
+        .run_default(r#"?[id] <- [[uuid_v5("url", "example.com")]]"#)
+        .unwrap();
+    assert_eq!(res.rows[0][0], res2.rows[0][0]);
+
+    // Different inputs produce different UUIDs
+    let res3 = db
+        .run_default(r#"?[id] <- [[uuid_v5("url", "other.com")]]"#)
+        .unwrap();
+    assert_ne!(res.rows[0][0], res3.rows[0][0]);
+
+    // uuid_v5 with to_uuid() namespace (URL namespace = 6ba7b811-9dad-11d1-80b4-00c04fd430c8)
+    let res4 = db
+        .run_default(r#"?[id] <- [[uuid_v5(to_uuid("6ba7b811-9dad-11d1-80b4-00c04fd430c8"), "example.com")]]"#)
+        .unwrap();
+    assert_eq!(res.rows[0][0], res4.rows[0][0]); // URL keyword == URL namespace UUID
+
+    // Unknown namespace should error
+    assert!(db
+        .run_default(r#"?[id] <- [[uuid_v5("unknown", "test")]]"#)
+        .is_err());
+}

@@ -2553,6 +2553,27 @@ pub(crate) fn op_rand_uuid_v4(_args: &[DataValue]) -> Result<DataValue> {
     Ok(DataValue::uuid(id))
 }
 
+define_op!(OP_UUID_V5, 2, false);
+pub(crate) fn op_uuid_v5(args: &[DataValue]) -> Result<DataValue> {
+    let namespace = match &args[0] {
+        DataValue::Uuid(UuidWrapper(ns)) => *ns,
+        DataValue::Str(s) => {
+            let s_lower = s.to_lowercase();
+            match s_lower.as_str() {
+                "dns" => uuid::Uuid::NAMESPACE_DNS,
+                "url" => uuid::Uuid::NAMESPACE_URL,
+                "oid" => uuid::Uuid::NAMESPACE_OID,
+                "x500" => uuid::Uuid::NAMESPACE_X500,
+                _ => bail!("unknown UUID v5 namespace: {}. Use one of: dns, url, oid, x500, or pass a UUID via to_uuid()", s),
+            }
+        }
+        _ => bail!("first argument to uuid_v5 must be a UUID (via to_uuid()) or one of: dns, url, oid, x500"),
+    };
+    let name = args[1].get_str().ok_or_else(|| miette!("second argument to uuid_v5 must be a string"))?;
+    let id = uuid::Uuid::new_v5(&namespace, name.as_bytes());
+    Ok(DataValue::uuid(id))
+}
+
 define_op!(OP_UUID_TIMESTAMP, 1, false);
 pub(crate) fn op_uuid_timestamp(args: &[DataValue]) -> Result<DataValue> {
     Ok(match &args[0] {

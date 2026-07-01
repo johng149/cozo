@@ -1400,6 +1400,21 @@ fn test_uuid() {
     assert!(op_uuid_timestamp(&[v1]).unwrap().get_float().is_some());
     assert!(op_to_uuid(&[DataValue::from("")]).is_err());
     assert!(op_to_uuid(&[DataValue::from("f3b4958c-52a1-11e7-802a-010203040506")]).is_ok());
+
+    // uuid_v5 with keyword namespace
+    let v5_dns = op_uuid_v5(&[DataValue::from("dns"), DataValue::from("example.com")]).unwrap();
+    assert!(v5_dns.get_uuid().is_some());
+    // uuid_v5 is deterministic - same inputs produce same output
+    let v5_dns2 = op_uuid_v5(&[DataValue::from("dns"), DataValue::from("example.com")]).unwrap();
+    assert_eq!(v5_dns.get_uuid().unwrap(), v5_dns2.get_uuid().unwrap());
+
+    // uuid_v5 with UUID namespace via to_uuid
+    let ns = op_to_uuid(&[DataValue::from("6ba7b810-9dad-11d1-80b4-00c04fd430c8")]).unwrap();
+    let v5_ns = op_uuid_v5(&[ns, DataValue::from("example.com")]).unwrap();
+    assert!(v5_ns.get_uuid().is_some());
+
+    // uuid_v5 with unknown namespace should fail
+    assert!(op_uuid_v5(&[DataValue::from("unknown"), DataValue::from("test")]).is_err());
 }
 
 #[test]

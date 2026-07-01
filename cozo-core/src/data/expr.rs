@@ -923,6 +923,7 @@ pub(crate) fn get_op(name: &str) -> Option<&'static Op> {
         "to_unity" => &OP_TO_UNITY,
         "rand_uuid_v1" => &OP_RAND_UUID_V1,
         "rand_uuid_v4" => &OP_RAND_UUID_V4,
+        "uuid_v5" => &OP_UUID_V5,
         "uuid_timestamp" => &OP_UUID_TIMESTAMP,
         "validity" => &OP_VALIDITY,
         "now" => &OP_NOW,
